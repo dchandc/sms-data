@@ -101,14 +101,19 @@ public class MainActivity extends Activity {
     @Override
     protected void onStop()
     {
-        if(m_bound)
-        {
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        if (m_bound) {
             unbindService(mConnection);
             m_bound = false;
         }
         TextView tv = (TextView) findViewById(R.id.text);
         tv.setText("Service stopped. Close the app (via the back button rather than the home button) and restart.");
-        super.onStop();
+        super.onDestroy();
     }
 }
 
