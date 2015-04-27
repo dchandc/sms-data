@@ -14,12 +14,22 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.provider.*;
 import android.content.*;
+import android.widget.Toast;
+
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 //public class MainActivity extends ActionBarActivity {
 public class MainActivity extends Activity {
 
     private SmsService sr;
     private boolean m_bound = false;
+    TextView tv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +39,16 @@ public class MainActivity extends Activity {
         //Launch the SmsService, which runs in the background and allows for a persistent broadcast receiver
         Intent intent = new Intent(this, SmsService.class);
         bindService(intent, mConnection, Service.BIND_AUTO_CREATE);
+
+        tv = (TextView) findViewById(R.id.text);
+        Button b = (Button) findViewById(R.id.button);
+        b.setOnClickListener(new Button.OnClickListener(){
+            public void onClick(View v)
+            {
+                Toast.makeText(getBaseContext(),"Please wait, connecting to server.", Toast.LENGTH_LONG).show();
+                new HttpTask(tv).execute("http://google.com");
+            }
+        });
     }
 
     /*
@@ -80,9 +100,7 @@ public class MainActivity extends Activity {
 
     public void onButtonClick(View view)
     {
-        TextView tv = (TextView) findViewById(R.id.text);
-        Button b = (Button) findViewById(R.id.button);
-        b.setText("I lied");
+
     }
 
     public void changeText(String s)
