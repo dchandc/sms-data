@@ -1,28 +1,23 @@
 package com.example.laptop.myapplication;
 
 //import android.support.v7.app.ActionBarActivity;
+
+import android.app.Activity;
+import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.app.Activity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.provider.*;
-import android.content.*;
 import android.widget.Toast;
-
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.DefaultHttpClient;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 //public class MainActivity extends ActionBarActivity {
 public class MainActivity extends Activity {
@@ -47,6 +42,37 @@ public class MainActivity extends Activity {
             {
                 Toast.makeText(getBaseContext(),"Please wait, connecting to server.", Toast.LENGTH_LONG).show();
                 new HttpTask(tv).execute("http://google.com");
+
+                String phoneNo = "16268698107";
+                String msg = "Test";
+                try {
+
+                    String SENT = "sent";
+                    String DELIVERED = "delivered";
+
+                    Intent sentIntent = new Intent(SENT);
+                    /*Create Pending Intents*/
+                    PendingIntent sentPI = PendingIntent.getBroadcast(
+                            getApplicationContext(), 0, sentIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT);
+
+                    Intent deliveryIntent = new Intent(DELIVERED);
+
+                    PendingIntent deliverPI = PendingIntent.getBroadcast(
+                            getApplicationContext(), 0, deliveryIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT);
+
+                    /*Send SMS*/
+                    SmsManager smsManager = SmsManager.getDefault();
+                    smsManager.sendTextMessage(phoneNo, null, msg, sentPI,
+                            deliverPI);
+                } catch (Exception ex) {
+                    Log.i("sms", "Exception reached");
+                    Toast.makeText(getApplicationContext(),
+                            ex.getMessage().toString(), Toast.LENGTH_LONG)
+                            .show();
+                    ex.printStackTrace();
+                }
             }
         });
     }

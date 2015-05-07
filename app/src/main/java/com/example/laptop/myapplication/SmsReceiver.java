@@ -3,9 +3,10 @@ package com.example.laptop.myapplication;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.telephony.*;
 import android.os.Bundle;
-import android.util.*;
+import android.telephony.SmsManager;
+import android.telephony.SmsMessage;
+import android.util.Log;
 /**
  * Created by laptop on 4/15/2015.
  */
