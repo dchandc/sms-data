@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.util.Log;
+import android.widget.Toast;
+
 /**
  * Created by laptop on 4/15/2015.
  */
@@ -26,9 +28,23 @@ public class SmsReceiver extends BroadcastReceiver{
             text messages? Whatever, this works for one text message for now.
              */
             Object[] data = (Object[]) bundle.get("pdus");
+            /*
             SmsMessage msg = SmsMessage.createFromPdu((byte[]) data[0]);
             Log.i("SMSR", msg.getDisplayMessageBody());
             main_act.changeText(msg.getDisplayMessageBody());
+            */
+            String str = "";
+            SmsMessage[] msgs = new SmsMessage[data.length];
+            for (int j=0; j<msgs.length; j++){
+                msgs[j] = SmsMessage.createFromPdu((byte[])data[j]);
+                str += "SMS from " + msgs[j].getOriginatingAddress();
+                str += " :";
+                str += msgs[j].getMessageBody().toString();
+                str += "\n";
+            }
+            Log.i("sms", str);
+            //---display the new SMS message---
+            Toast.makeText(main_act, str, Toast.LENGTH_SHORT).show();
         }
     }
 

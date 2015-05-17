@@ -19,6 +19,10 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.util.Arrays;
+
 //public class MainActivity extends ActionBarActivity {
 public class MainActivity extends Activity {
 
@@ -40,18 +44,43 @@ public class MainActivity extends Activity {
         b.setOnClickListener(new Button.OnClickListener(){
             public void onClick(View v)
             {
+                /*
                 Toast.makeText(getBaseContext(),"Please wait, connecting to server.", Toast.LENGTH_LONG).show();
                 new HttpTask(tv).execute("http://google.com");
+                */
 
-                String phoneNo = "16268698107";
+                String phoneNo = "5556";
                 String msg = "Test";
                 try {
+                    /*
+                    char[] packet = new char[160];
+                    Arrays.fill(packet, 'a');
+                    msg = new String(packet);
 
+                    SmsManager smsManager = SmsManager.getDefault();
+                    smsManager.sendTextMessage(phoneNo, null, msg, null,
+                            null);
+                    Log.i("sms", "Message sent");
+                    */
+
+                    // Test DatagramWrapper
+                    byte[] buffer = new byte[10];
+                    Arrays.fill(buffer, (byte) 'a');
+                    DatagramPacket tmp = new DatagramPacket(buffer, buffer.length);
+                    tmp.setAddress(InetAddress.getByName("1.2.3.4"));
+                    tmp.setPort(3333);
+                    byte[] serialized = DatagramWrapper.getByteArray(tmp);
+                    DatagramPacket tmp2 = DatagramWrapper.getPacket(serialized);
+                    Log.i("test", tmp2.getAddress().getHostAddress() + " " + tmp2.getPort());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                Log.i("test", "Pressed");
+                    /*
                     String SENT = "sent";
                     String DELIVERED = "delivered";
 
                     Intent sentIntent = new Intent(SENT);
-                    /*Create Pending Intents*/
                     PendingIntent sentPI = PendingIntent.getBroadcast(
                             getApplicationContext(), 0, sentIntent,
                             PendingIntent.FLAG_UPDATE_CURRENT);
@@ -62,7 +91,6 @@ public class MainActivity extends Activity {
                             getApplicationContext(), 0, deliveryIntent,
                             PendingIntent.FLAG_UPDATE_CURRENT);
 
-                    /*Send SMS*/
                     SmsManager smsManager = SmsManager.getDefault();
                     smsManager.sendTextMessage(phoneNo, null, msg, sentPI,
                             deliverPI);
@@ -73,6 +101,7 @@ public class MainActivity extends Activity {
                             .show();
                     ex.printStackTrace();
                 }
+                */
             }
         });
     }
