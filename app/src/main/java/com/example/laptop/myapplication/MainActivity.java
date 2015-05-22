@@ -49,9 +49,14 @@ public class MainActivity extends Activity {
                 new HttpTask(tv).execute("http://google.com");
                 */
 
+                Toast.makeText(getBaseContext(), "Please wait, sending DNS packet...", Toast.LENGTH_LONG).show();
+                new DnsTask(tv).execute();
+
+                /*
                 String phoneNo = "5556";
                 String msg = "Test";
                 try {
+                */
                     /*
                     char[] packet = new char[160];
                     Arrays.fill(packet, 'a');
@@ -64,6 +69,7 @@ public class MainActivity extends Activity {
                     */
 
                     // Test DatagramWrapper
+                    /*
                     byte[] buffer = new byte[10];
                     Arrays.fill(buffer, (byte) 'a');
                     DatagramPacket tmp = new DatagramPacket(buffer, buffer.length);
@@ -75,6 +81,7 @@ public class MainActivity extends Activity {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
+                */
                 Log.i("test", "Pressed");
                     /*
                     String SENT = "sent";
