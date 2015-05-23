@@ -46,7 +46,7 @@ public class DnsTask extends AsyncTask<String, Void, String> {
             Log.i("dns", "Sending packet");
             StringBuilder sb = new StringBuilder("");
             for (int i = 0; i < query.length; i++) {
-                sb.append(String.format("%2x", query[i]) + " ");
+                sb.append(String.format("%02x", query[i]) + " ");
             }
             Log.i("dns", "Send packet[" + packet.getLength() + "]: " + sb.toString());
             socket.send(packet);
@@ -56,7 +56,7 @@ public class DnsTask extends AsyncTask<String, Void, String> {
             socket.receive(packet);
             sb = new StringBuilder("");
             for (int i = 0; i < packet.getLength(); i++) {
-                sb.append(String.format("%2x", buffer[i]) + " ");
+                sb.append(String.format("%02x", buffer[i]) + " ");
             }
             Log.i("dns", "Recv packet[" + packet.getLength() + "]: " + sb.toString());
         } catch (Exception e) {

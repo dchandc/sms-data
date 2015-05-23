@@ -38,13 +38,13 @@ public class SmsReceiver extends BroadcastReceiver{
             for (int j=0; j<msgs.length; j++){
                 msgs[j] = SmsMessage.createFromPdu((byte[])data[j]);
                 str += "SMS from " + msgs[j].getOriginatingAddress();
-                str += " :";
-                str += msgs[j].getMessageBody().toString();
+                str += " [" + j + "]:";
+                str += msgs[j].getMessageBody();
                 str += "\n";
             }
             Log.i("sms", str);
             //---display the new SMS message---
-            Toast.makeText(main_act, str, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(main_act, str, Toast.LENGTH_SHORT).show();
         }
     }
 

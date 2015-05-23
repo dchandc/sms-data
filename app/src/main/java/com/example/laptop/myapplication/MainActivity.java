@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 //public class MainActivity extends ActionBarActivity {
@@ -49,22 +50,28 @@ public class MainActivity extends Activity {
                 new HttpTask(tv).execute("http://google.com");
                 */
 
+                /*
                 Toast.makeText(getBaseContext(), "Please wait, sending DNS packet...", Toast.LENGTH_LONG).show();
                 new DnsTask(tv).execute();
+                */
+
+
+                Toast.makeText(getBaseContext(), "Please wait, sending SMS...", Toast.LENGTH_LONG).show();
+                new SmsTask(tv).execute();
+
 
                 /*
                 String phoneNo = "5556";
-                String msg = "Test";
+                String msg;
                 try {
-                */
-                    /*
-                    char[] packet = new char[160];
+                    char[] packet = new char[1000];
                     Arrays.fill(packet, 'a');
                     msg = new String(packet);
 
                     SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(phoneNo, null, msg, null,
-                            null);
+                    //smsManager.sendTextMessage(phoneNo, null, msg, null, null);
+                    ArrayList<String> msgList = smsManager.divideMessage(msg);
+                    smsManager.sendMultipartTextMessage(phoneNo, null, msgList, null, null);
                     Log.i("sms", "Message sent");
                     */
 
@@ -78,6 +85,8 @@ public class MainActivity extends Activity {
                     byte[] serialized = DatagramWrapper.getByteArray(tmp);
                     DatagramPacket tmp2 = DatagramWrapper.getPacket(serialized);
                     Log.i("test", tmp2.getAddress().getHostAddress() + " " + tmp2.getPort());
+                    */
+                /*
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -98,6 +107,7 @@ public class MainActivity extends Activity {
                             getApplicationContext(), 0, deliveryIntent,
                             PendingIntent.FLAG_UPDATE_CURRENT);
 
+                    msg = "Test";
                     SmsManager smsManager = SmsManager.getDefault();
                     smsManager.sendTextMessage(phoneNo, null, msg, sentPI,
                             deliverPI);
