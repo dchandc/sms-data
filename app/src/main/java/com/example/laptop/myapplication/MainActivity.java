@@ -18,7 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.util.Base64;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -205,5 +205,6 @@ public class MainActivity extends Activity {
         tv.setText("Service stopped. Close the app (via the back button rather than the home button) and restart.");
         super.onDestroy();
     }
+
 }
 

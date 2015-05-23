@@ -8,6 +8,7 @@ import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.util.Log;
 import android.widget.Toast;
+import android.util.Base64;
 
 /**
  * Created by laptop on 4/15/2015.
@@ -40,11 +41,24 @@ public class SmsReceiver extends BroadcastReceiver{
                 str += "SMS from " + msgs[j].getOriginatingAddress();
                 str += " [" + j + "]:";
                 str += msgs[j].getMessageBody();
+                Log.i("RECV", msgs[j].getMessageBody());
+
+                byte[] raw = Base64.decode(msgs[j].getMessageBody(), Base64.DEFAULT);
+                /*String temp = "";
+                for(int k = 0; k < raw.length; k++) {
+                    temp += String.format("0x%02X", raw[k]) + " ";
+                    if((k+1)%8 == 0) {
+                        Log.i("RECV", temp);
+                        temp = "";
+                    }
+                }
+                Log.i("RECV", temp);
+                */
                 str += "\n";
             }
             Log.i("sms", str);
             //---display the new SMS message---
-            //Toast.makeText(main_act, str, Toast.LENGTH_SHORT).show();
+            Toast.makeText(main_act, str, Toast.LENGTH_SHORT).show();
         }
     }
 
