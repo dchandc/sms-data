@@ -23,7 +23,7 @@ public class SmsReceiver extends BroadcastReceiver{
     DatagramSocket socket;
     String googleDns = "8.8.8.8";
     int dnsPort = 53;
-    int bytesPerSms = 120;
+    int bytesPerSms = 118;
 
     public SmsReceiver() {
         smsManager = SmsManager.getDefault();
@@ -129,9 +129,9 @@ public class SmsReceiver extends BroadcastReceiver{
                 Log.i("dns", "Recv packet[" + packet.getLength() + "]: " + sb.toString());
 
                 for (int i = 0; i < (packet.getLength() / bytesPerSms) + 1; i++) {
-                    byte[] sub = new byte[bytesPerSms];
                     int offset = i * bytesPerSms;
                     int len = (packet.getLength() - offset) % bytesPerSms;
+                    byte[] sub = new byte[len];
                     System.arraycopy(buffer, offset, sub, 0, len);
                     String msg = Base64.encodeToString(sub, Base64.DEFAULT);
                     smsManager.sendTextMessage(from, null, msg, null, null);
