@@ -57,6 +57,7 @@ public class SmsReceiver extends BroadcastReceiver{
         int seqNum = raw[0];
         int dataNum = raw[1];
         int dataCount = raw[2];
+        Log.i("sms", seqNum + " " + dataNum + " " + dataCount);
         // dataNum and dataCount start at 1
         if (seqNum < 0 || dataNum < 1 || dataCount < 1 || dataNum > dataCount)
             return;
@@ -73,6 +74,7 @@ public class SmsReceiver extends BroadcastReceiver{
                 found = true;
                 mbuf.add(data, dataNum);
                 mbufIndex = i;
+                Log.i("sms", "Found mbuf with seqNum " + seqNum);
                 break;
             }
         }
@@ -80,6 +82,9 @@ public class SmsReceiver extends BroadcastReceiver{
         if (!found) {
             mbuf = new MessageBuffer(seqNum);
             mbuf.add(data, dataNum);
+            mbufList.add(mbuf);
+            mbufIndex = mbufList.size() - 1;
+            Log.i("sms", "Added mbuf with seqNum " + seqNum);
         }
 
         if (mbuf.count == dataCount) {
