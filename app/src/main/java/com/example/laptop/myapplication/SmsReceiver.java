@@ -13,10 +13,6 @@ import android.util.Base64;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 
 /**
  * Created by laptop on 4/15/2015.
@@ -28,11 +24,9 @@ public class SmsReceiver extends BroadcastReceiver{
     String googleDns = "8.8.8.8";
     int dnsPort = 53;
     int bytesPerSms = 118;
-    ArrayList<MessageBuffer> mbufList;
 
     public SmsReceiver() {
         smsManager = SmsManager.getDefault();
-        mbufList = new ArrayList<MessageBuffer>();
         try {
             socket = new DatagramSocket();
         } catch (Exception e) {
@@ -44,59 +38,18 @@ public class SmsReceiver extends BroadcastReceiver{
     {
         Log.i("SMSR", "Received");
         Bundle bundle = intent.getExtras();
-        if(bundle == null)
-            return;
-
-        Object[] pdus = (Object[]) bundle.get("pdus");
-        SmsMessage sms = SmsMessage.createFromPdu((byte[]) pdus[0]);
-        String from = sms.getOriginatingAddress();
-        byte[] raw = Base64.decode(sms.getMessageBody(), Base64.DEFAULT);
-        if (raw.length < 3)
-            return;
-
-        int seqNum = raw[0];
-        int dataNum = raw[1];
-        int dataCount = raw[2];
-        Log.i("sms", seqNum + " " + dataNum + " " + dataCount);
-        // dataNum and dataCount start at 1
-        if (seqNum < 0 || dataNum < 1 || dataCount < 1 || dataNum > dataCount)
-            return;
-
-        byte[] data = new byte[raw.length - 3];
-        System.arraycopy(raw, 3, data, 0, raw.length - 3);
-
-        boolean found = false;
-        MessageBuffer mbuf = null;
-        int mbufIndex = -1;
-        for (int i = 0; i < mbufList.size(); i++) {
-            mbuf = mbufList.get(i);
-            if (mbuf.seqNum == seqNum) {
-                found = true;
-                mbuf.add(data, dataNum);
-                mbufIndex = i;
-                Log.i("sms", "Found mbuf with seqNum " + seqNum);
-                break;
+        if(bundle != null)
+        {
+            Object[] data = (Object[]) bundle.get("pdus");
+            for (int j=0; j < data.length; j++){
+                SmsMessage sms = SmsMessage.createFromPdu((byte[])data[j]);
+                Thread t = new Thread(new SmsRunnable(sms));
+                t.start();
             }
-        }
 
-        if (!found) {
-            mbuf = new MessageBuffer(seqNum);
-            mbuf.add(data, dataNum);
-            mbufList.add(mbuf);
-            mbufIndex = mbufList.size() - 1;
-            Log.i("sms", "Added mbuf with seqNum " + seqNum);
-        }
-
-        if (mbuf.count == dataCount) {
-            byte[] mergedData = mbuf.getData();
-            StringBuilder sb = new StringBuilder("");
-            for (int i = 0; i < mergedData.length; i++) {
-                sb.append(String.format("%02x", mergedData[i]) + " ");
-            }
-            Log.i("sms", "Merged data[" + mergedData.length + "]: " + sb.toString());
-            //Thread t = new Thread(new SmsRunnable(mergedData, from));
-            //t.start();
-            mbufList.remove(mbufIndex);
+            //---display the new SMS message---
+            //Toast.makeText(main_act, str, Toast.LENGTH_SHORT).show();
+            Toast.makeText(main_act, "Done", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -104,93 +57,37 @@ public class SmsReceiver extends BroadcastReceiver{
         main_act = act;
     }
 
-    public class MessageBuffer {
-        ArrayList<Entry> list;
-        int count;
-        int length;
-        int seqNum;
-
-        class Entry {
-            byte[] data;
-            int dataNum;
-
-            Entry(byte[] data, int dataNum) {
-                this.data = data;
-                this.dataNum = dataNum;
-            }
-        }
-
-        public MessageBuffer(int seqNum) {
-            this.seqNum = seqNum;
-            list = new ArrayList<Entry>();
-            count = 0;
-            length = 0;
-        }
-
-        public void add(byte[] data, int dataNum) {
-            if (data == null || dataNum < 1)
-                return;
-
-            // Reject duplicates
-            for (int i = 0; i < list.size(); i++) {
-                if (list.get(i).dataNum == dataNum)
-                    return;
-            }
-
-            list.add(new Entry(data, dataNum));
-            length += data.length;
-            count++;
-        }
-
-        public byte[] getData() {
-            if (list.size() < 1)
-                return null;
-
-            Collections.sort(list, new Comparator<Entry>() {
-                @Override
-                public int compare(Entry first, Entry second) {
-                    if (first.dataNum < second.dataNum)
-                        return -1;
-                    else if (first.dataNum > second.dataNum)
-                        return 1;
-                    else
-                        return 0;
-                }
-            });
-
-            byte[] mergedData = new byte[length];
-            int offset = 0;
-            for (int i = 0; i < list.size(); i++){
-                byte[] b = list.get(i).data;
-                System.arraycopy(b, 0, mergedData, offset, b.length);
-                offset += b.length;
-            }
-
-            return mergedData;
-        }
-    }
-
     public class SmsRunnable implements Runnable {
-        byte[] raw;
-        String from;
-
-        public SmsRunnable(byte[] raw, String from) {
-            this.raw = raw;
-            this.from = from;
-
-            String temp = "";
-            for(int k = 0; k < raw.length; k++) {
-                temp += String.format("0x%02X", raw[k]) + " ";
-                if((k+1)%8 == 0) {
-                    Log.i("sms", temp);
-                    temp = "";
-                }
-            }
-            Log.i("sms", temp);
+        SmsMessage sms;
+        public SmsRunnable(SmsMessage sms) {
+            this.sms = sms;
         }
 
         @Override
         public void run() {
+            String from = sms.getOriginatingAddress();
+            /*
+            String str = "";
+            str += "SMS from " + sms.getOriginatingAddress();
+            str += " [" + j + "]:";
+            str += sms.getMessageBody();
+            str += "\n";
+            Log.i("sms", str);
+            */
+
+            byte[] raw = Base64.decode(sms.getMessageBody(), Base64.DEFAULT);
+            /*
+            String temp = "";
+            for(int k = 0; k < raw.length; k++) {
+            temp += String.format("0x%02X", raw[k]) + " ";
+            if((k+1)%8 == 0) {
+                Log.i("RECV", temp);
+                temp = "";
+                }
+            }
+            Log.i("RECV", temp);
+            */
+
             int queryLength = raw.length - 28;
             if (queryLength < 0)
                 return;
