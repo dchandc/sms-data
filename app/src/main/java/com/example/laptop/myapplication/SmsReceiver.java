@@ -10,40 +10,50 @@ import android.util.Log;
 import android.widget.Toast;
 import android.util.Base64;
 
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+
 /**
  * Created by laptop on 4/15/2015.
  */
 public class SmsReceiver extends BroadcastReceiver{
-    SmsManager smsm = SmsManager.getDefault();
     MainActivity main_act;
+    SmsManager smsManager;
+    DatagramSocket socket;
+    String googleDns = "8.8.8.8";
+    int dnsPort = 53;
+    int bytesPerSms = 120;
 
-    public void onReceive(Context c, Intent i)
+    public SmsReceiver() {
+        smsManager = SmsManager.getDefault();
+        try {
+            socket = new DatagramSocket();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void onReceive(Context context, Intent intent)
     {
         Log.i("SMSR", "Received");
-        Bundle bundle = i.getExtras();
+        Bundle bundle = intent.getExtras();
         if(bundle != null)
         {
-            /*
-            This is apparently not the right way to receive test messages. You're supposed to
-            create a loop and iterate through the data array. Perhaps that's for multi-message
-            text messages? Whatever, this works for one text message for now.
-             */
             Object[] data = (Object[]) bundle.get("pdus");
-            /*
-            SmsMessage msg = SmsMessage.createFromPdu((byte[]) data[0]);
-            Log.i("SMSR", msg.getDisplayMessageBody());
-            main_act.changeText(msg.getDisplayMessageBody());
-            */
-            String str = "";
-            SmsMessage[] msgs = new SmsMessage[data.length];
-            for (int j=0; j<msgs.length; j++){
-                msgs[j] = SmsMessage.createFromPdu((byte[])data[j]);
-                str += "SMS from " + msgs[j].getOriginatingAddress();
+            for (int j=0; j < data.length; j++){
+                SmsMessage sms = SmsMessage.createFromPdu((byte[])data[j]);
+                String from = sms.getOriginatingAddress();
+                /*
+                String str = "";
+                str += "SMS from " + sms.getOriginatingAddress();
                 str += " [" + j + "]:";
-                str += msgs[j].getMessageBody();
-                Log.i("RECV", msgs[j].getMessageBody());
+                str += sms.getMessageBody();
+                str += "\n";
+                Log.i("sms", str);
+                */
 
-                byte[] raw = Base64.decode(msgs[j].getMessageBody(), Base64.DEFAULT);
+                byte[] raw = Base64.decode(sms.getMessageBody(), Base64.DEFAULT);
                 /*String temp = "";
                 for(int k = 0; k < raw.length; k++) {
                     temp += String.format("0x%02X", raw[k]) + " ";
@@ -54,11 +64,63 @@ public class SmsReceiver extends BroadcastReceiver{
                 }
                 Log.i("RECV", temp);
                 */
-                str += "\n";
+
+                int queryLength = raw.length - 28;
+                if (queryLength < 0)
+                    continue;
+
+                byte[] query = new byte[queryLength];
+                System.arraycopy(raw, 28, query, 0, queryLength);
+                DatagramPacket packet = new DatagramPacket(query, query.length);
+
+                try {
+                    InetAddress destAddress = null;
+                    int destPort = (raw[22] & 0xff) << 8 | (raw[23] & 0xff);
+                    if (destPort == dnsPort) {
+                        destAddress = InetAddress.getByName(googleDns);
+                    } else {
+                        String addressString = String.format("%d.%d.%d.%d",
+                                raw[16] & 0xff, raw[17] & 0xff,
+                                raw[18] & 0xff, raw[19] & 0xff);
+                        destAddress = InetAddress.getByName(addressString);
+                    }
+                    packet.setAddress(destAddress);
+                    packet.setPort(destPort);
+
+                    StringBuilder sb = new StringBuilder("");
+                    for (int i = 0; i < query.length; i++) {
+                        sb.append(String.format("%02x", query[i]) + " ");
+                    }
+                    Log.i("dns", "Send packet[" + packet.getLength() + "]: " + sb.toString());
+                    socket.send(packet);
+
+                    byte[] buffer = new byte[2048];
+                    packet.setData(buffer);
+                    packet.setLength(buffer.length);
+                    socket.receive(packet);
+                    sb = new StringBuilder("");
+                    for (int i = 0; i < packet.getLength(); i++) {
+                        sb.append(String.format("%02x", buffer[i]) + " ");
+                    }
+                    Log.i("dns", "Recv packet[" + packet.getLength() + "]: " + sb.toString());
+
+                    for (int i = 0; i < (packet.getLength() / bytesPerSms) + 1; i++) {
+                        byte[] sub = new byte[bytesPerSms];
+                        int offset = i * bytesPerSms;
+                        int len = (packet.getLength() - offset) % bytesPerSms;
+                        System.arraycopy(buffer, offset, sub, 0, len);
+                        String msg = Base64.encodeToString(sub, Base64.DEFAULT);
+                        smsManager.sendTextMessage(from, null, msg, null, null);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    continue;
+                }
             }
-            Log.i("sms", str);
+
             //---display the new SMS message---
-            Toast.makeText(main_act, str, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(main_act, str, Toast.LENGTH_SHORT).show();
+            Toast.makeText(main_act, "Done", Toast.LENGTH_SHORT).show();
         }
     }
 
