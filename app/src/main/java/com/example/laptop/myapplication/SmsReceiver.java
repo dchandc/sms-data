@@ -84,8 +84,13 @@ public class SmsReceiver extends BroadcastReceiver{
 
         if (mbuf.count == dataCount) {
             byte[] mergedData = mbuf.getData();
-            Thread t = new Thread(new SmsRunnable(mergedData, from));
-            t.start();
+            StringBuilder sb = new StringBuilder("");
+            for (int i = 0; i < mergedData.length; i++) {
+                sb.append(String.format("%02x", mergedData[i]) + " ");
+            }
+            Log.i("sms", "Merged data[" + mergedData.length + "]: " + sb.toString());
+            //Thread t = new Thread(new SmsRunnable(mergedData, from));
+            //t.start();
             mbufList.remove(mbufIndex);
         }
     }

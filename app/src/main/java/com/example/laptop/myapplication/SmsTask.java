@@ -22,32 +22,58 @@ public class SmsTask extends AsyncTask<String, Void, String> {
     }
     @Override
     protected String doInBackground(String... urls) {
+        SmsManager smsManager = SmsManager.getDefault();
         String str = "Sent";
         try {
             //String phoneNo = "5556";
-            String phoneNo = "15304004608";
+            String phoneNo = "16262158107";
             String msg;
 
             byte [] all = new byte[64];
-            for(int i = 0; i < 64; i++)
+            all[0] = 100;
+            all[1] = 1;
+            all[2] = 2;
+            for(int i = 3; i < 64; i++)
             {
                 all[i] = (byte) i;
             }
             msg = Base64.encodeToString(all, Base64.DEFAULT);
-
-            char[] packet = new char[1000];
-            Arrays.fill(packet, 'a');
-            packet[999] = '\0';
-            //msg = new String(packet);
-            //msg = "HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello";
-            //msg = "HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello";
             Log.i("sms", "Sending message: " + msg);
-
-            SmsManager smsManager = SmsManager.getDefault();
             smsManager.sendTextMessage(phoneNo, null, msg, null, null);
-            ArrayList<String> msgList = smsManager.divideMessage(msg);
-            //smsManager.sendMultipartTextMessage(phoneNo, null, msgList, null, null);
             Log.i("sms", "Message sent");
+
+            all[0] = 101;
+            all[1] = 2;
+            all[2] = 3;
+            msg = Base64.encodeToString(all, Base64.DEFAULT);
+            Log.i("sms", "Sending message: " + msg);
+            smsManager.sendTextMessage(phoneNo, null, msg, null, null);
+            Log.i("sms", "Message sent");
+
+            all[0] = 102;
+            all[1] = 1;
+            all[2] = 1;
+            msg = Base64.encodeToString(all, Base64.DEFAULT);
+            Log.i("sms", "Sending message: " + msg);
+            smsManager.sendTextMessage(phoneNo, null, msg, null, null);
+            Log.i("sms", "Message sent");
+
+            all[0] = 101;
+            all[1] = 1;
+            all[2] = 3;
+            msg = Base64.encodeToString(all, Base64.DEFAULT);
+            Log.i("sms", "Sending message: " + msg);
+            smsManager.sendTextMessage(phoneNo, null, msg, null, null);
+            Log.i("sms", "Message sent");
+
+            all[0] = 101;
+            all[1] = 3;
+            all[2] = 3;
+            msg = Base64.encodeToString(all, Base64.DEFAULT);
+            Log.i("sms", "Sending message: " + msg);
+            smsManager.sendTextMessage(phoneNo, null, msg, null, null);
+            Log.i("sms", "Message sent");
+
         } catch (Exception e) {
             e.printStackTrace();
             Log.i("sms", "Exception");
