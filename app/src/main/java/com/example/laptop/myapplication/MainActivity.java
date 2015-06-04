@@ -1,135 +1,93 @@
 package com.example.laptop.myapplication;
 
-//import android.support.v7.app.ActionBarActivity;
-
 import android.app.Activity;
-import android.app.PendingIntent;
+import android.app.AlertDialog;
 import android.app.Service;
 import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.telephony.SmsManager;
+import android.text.InputType;
+import android.text.Layout;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.util.Base64;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
 
-//public class MainActivity extends ActionBarActivity {
 public class MainActivity extends Activity {
-
     private SmsService sr;
     private boolean m_bound = false;
     TextView tv;
+    Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Launch the SmsService, which runs in the background and allows for a persistent broadcast receiver
+        context = this;
+
+        // Launch the SmsService, which runs in the background and allows for a persistent
+        // broadcast receiver.
         Intent intent = new Intent(this, SmsService.class);
         bindService(intent, mConnection, Service.BIND_AUTO_CREATE);
 
-        tv = (TextView) findViewById(R.id.text);
-        Button b = (Button) findViewById(R.id.button);
-        b.setOnClickListener(new Button.OnClickListener(){
-            public void onClick(View v)
-            {
-                /*
-                Toast.makeText(getBaseContext(),"Please wait, connecting to server.", Toast.LENGTH_LONG).show();
-                new HttpTask(tv).execute("http://google.com");
-                */
+        tv = (TextView) findViewById(R.id.text_status);
+        tv.setMovementMethod(new ScrollingMovementMethod());
 
-                /*
-                Toast.makeText(getBaseContext(), "Please wait, sending DNS packet...", Toast.LENGTH_LONG).show();
-                new DnsTask(tv).execute();
-                */
+        Button b = (Button) findViewById(R.id.button_debug);
+        b.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setTitle("Send test SMS message");
+                builder.setMessage("Enter phone number");
+                final EditText eText = new EditText(context);
+                eText.setInputType(InputType.TYPE_CLASS_TEXT);
+                eText.setTextColor(Color.rgb(0, 0, 0));
+                builder.setView(eText);
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String str = eText.getText().toString();
+                        if (str != null && str.matches("\\d+(\\.\\d+)?")) {
+                            new SmsTask(context, tv, str).execute();
+                        } else {
+                            Toast.makeText(context, "Invalid phone number",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
 
-
-                Toast.makeText(getBaseContext(), "Please wait, sending SMS...", Toast.LENGTH_LONG).show();
-                new SmsTask(tv).execute();
-
-
-                /*
-                String phoneNo = "5556";
-                String msg;
-                try {
-                    char[] packet = new char[1000];
-                    Arrays.fill(packet, 'a');
-                    msg = new String(packet);
-
-                    SmsManager smsManager = SmsManager.getDefault();
-                    //smsManager.sendTextMessage(phoneNo, null, msg, null, null);
-                    ArrayList<String> msgList = smsManager.divideMessage(msg);
-                    smsManager.sendMultipartTextMessage(phoneNo, null, msgList, null, null);
-                    Log.i("sms", "Message sent");
-                    */
-
-                    // Test DatagramWrapper
-                    /*
-                    byte[] buffer = new byte[10];
-                    Arrays.fill(buffer, (byte) 'a');
-                    DatagramPacket tmp = new DatagramPacket(buffer, buffer.length);
-                    tmp.setAddress(InetAddress.getByName("1.2.3.4"));
-                    tmp.setPort(3333);
-                    byte[] serialized = DatagramWrapper.getByteArray(tmp);
-                    DatagramPacket tmp2 = DatagramWrapper.getPacket(serialized);
-                    Log.i("test", tmp2.getAddress().getHostAddress() + " " + tmp2.getPort());
-                    */
-                /*
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-                */
-                Log.i("test", "Pressed");
-                    /*
-                    String SENT = "sent";
-                    String DELIVERED = "delivered";
-
-                    Intent sentIntent = new Intent(SENT);
-                    PendingIntent sentPI = PendingIntent.getBroadcast(
-                            getApplicationContext(), 0, sentIntent,
-                            PendingIntent.FLAG_UPDATE_CURRENT);
-
-                    Intent deliveryIntent = new Intent(DELIVERED);
-
-                    PendingIntent deliverPI = PendingIntent.getBroadcast(
-                            getApplicationContext(), 0, deliveryIntent,
-                            PendingIntent.FLAG_UPDATE_CURRENT);
-
-                    msg = "Test";
-                    SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage(phoneNo, null, msg, sentPI,
-                            deliverPI);
-                } catch (Exception ex) {
-                    Log.i("sms", "Exception reached");
-                    Toast.makeText(getApplicationContext(),
-                            ex.getMessage().toString(), Toast.LENGTH_LONG)
-                            .show();
-                    ex.printStackTrace();
-                }
-                */
+                builder.show();
             }
         });
+
+        appendText("Listening for SMS messages...\n");
     }
 
-    /*
-    In order to bind a service (which allows it to communicate with other components of the application rather
-    than running in isolation, you need to pass a ServiceConnection. When you call bindService the service
-    will be created and it will attempt to bind it to the component that created it. If successful, it'll
-    call the onServiceConnected function. This allows the calling component to get an object that
-    corresponds to the newly created Service. setCallingActivity is called so that the BroadcastReceiver
-    has access to the MainActivity, allowing it to change the text on the calling Activity.
+    /**
+     * In order to bind a service (which allows it to communicate with other components of the
+     * application rather than running in isolation, you need to pass a ServiceConnection. When
+     * you call bindService the service will be created and it will attempt to bind it to the
+     * component that created it. If successful, it'll call the onServiceConnected function.
+     * This allows the calling component to get an object that corresponds to the newly created
+     * Service. setCallingActivity is called so that the BroadcastReceiver has access to the
+     * MainActivity, allowing it to change the text on the calling Activity.
      */
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -148,9 +106,23 @@ public class MainActivity extends Activity {
         }
     };
 
+    public void appendText(String s)
+    {
+        TextView tv = (TextView) findViewById(R.id.text_status);
+        tv.append(s);
+
+        final Layout layout = tv.getLayout();
+        if(layout != null) {
+            int scrollDelta = layout.getLineBottom(tv.getLineCount() - 1)
+                    - tv.getScrollY() - tv.getHeight();
+            if (scrollDelta > 0)
+                tv.scrollBy(0, scrollDelta);
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        // Inflate the menu. This adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
@@ -162,7 +134,6 @@ public class MainActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
@@ -170,23 +141,12 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void onButtonClick(View view)
-    {
-
-    }
-
-    public void changeText(String s)
-    {
-        TextView tv = (TextView) findViewById(R.id.text);
-        tv.setText(s);
-    }
-
-    /*
-    When an application fully closes (by pressing "back"), all of the lifecycle methods will be called,
-    including onStop. However, when the application is put into a suspended state (pressing "home",
-    changing the orientation, turning off the screen), some of the termination methods including
-    onStop will be called. If we want the service to stay alive during suspensions, move the following
-    to onDestroy.
+    /**
+     * When an application fully closes (by pressing "back"), all of the lifecycle methods will
+     * be called, including onStop. However, when the application is put into a suspended state
+     * (pressing "home", changing the orientation, turning off the screen), some of the termination
+     * methods including onStop will be called. If we want the service to stay alive during
+     * suspensions, move the following to onDestroy.
      */
     @Override
     protected void onStop()
@@ -201,10 +161,8 @@ public class MainActivity extends Activity {
             unbindService(mConnection);
             m_bound = false;
         }
-        TextView tv = (TextView) findViewById(R.id.text);
-        tv.setText("Service stopped. Close the app (via the back button rather than the home button) and restart.");
+        TextView tv = (TextView) findViewById(R.id.text_status);
+        tv.setText("Service stopped. Close the app and restart.");
         super.onDestroy();
     }
-
 }
-

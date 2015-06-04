@@ -3,20 +3,18 @@ package com.example.laptop.myapplication;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.util.Log;
-import android.widget.Toast;
 import android.util.Base64;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
-/**
- * Created by laptop on 4/15/2015.
- */
 public class SmsReceiver extends BroadcastReceiver{
     MainActivity main_act;
     SmsManager smsManager;
@@ -36,20 +34,20 @@ public class SmsReceiver extends BroadcastReceiver{
 
     public void onReceive(Context context, Intent intent)
     {
-        Log.i("SMSR", "Received");
+        Log.i("SmsReceiver", "Received");
         Bundle bundle = intent.getExtras();
         if(bundle != null)
         {
             Object[] data = (Object[]) bundle.get("pdus");
             for (int j=0; j < data.length; j++){
                 SmsMessage sms = SmsMessage.createFromPdu((byte[])data[j]);
-                Thread t = new Thread(new SmsRunnable(sms));
-                t.start();
+                SmsAsyncTask task = new SmsAsyncTask(sms);
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                    task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                else
+                    task.execute();
+                Log.i("SmsReceiver", "Executed new SmsAsyncTask");
             }
-
-            //---display the new SMS message---
-            //Toast.makeText(main_act, str, Toast.LENGTH_SHORT).show();
-            Toast.makeText(main_act, "Done", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -57,40 +55,35 @@ public class SmsReceiver extends BroadcastReceiver{
         main_act = act;
     }
 
-    public class SmsRunnable implements Runnable {
+
+    public class SmsAsyncTask extends AsyncTask<Void, String, Void> {
         SmsMessage sms;
-        public SmsRunnable(SmsMessage sms) {
+        public SmsAsyncTask(SmsMessage sms) {
             this.sms = sms;
         }
 
         @Override
-        public void run() {
+        protected Void doInBackground(Void... voids) {
             String from = sms.getOriginatingAddress();
-            /*
-            String str = "";
-            str += "SMS from " + sms.getOriginatingAddress();
-            str += " [" + j + "]:";
-            str += sms.getMessageBody();
-            str += "\n";
-            Log.i("sms", str);
-            */
+            String body = sms.getMessageBody();
+
+            StringBuilder sb = new StringBuilder("SMS message from " +
+                    from + " [" + body.length() + "]: " +
+                    body);
+            publishProgress(sb.toString());
 
             byte[] raw = Base64.decode(sms.getMessageBody(), Base64.DEFAULT);
-            /*
-            String temp = "";
-            for(int k = 0; k < raw.length; k++) {
-            temp += String.format("0x%02X", raw[k]) + " ";
-            if((k+1)%8 == 0) {
-                Log.i("RECV", temp);
-                temp = "";
-                }
+
+            sb = new StringBuilder("Byte64-decoded SMS message [" + raw.length + "]: ");
+            for (int i = 0; i < raw.length; i++) {
+                sb.append(String.format("%02x ", raw[i]));
             }
-            Log.i("RECV", temp);
-            */
+            sb.append("\n");
+            publishProgress(sb.toString());
 
             int queryLength = raw.length - 28;
             if (queryLength < 0)
-                return;
+                return null;
 
             byte[] query = new byte[queryLength];
             System.arraycopy(raw, 28, query, 0, queryLength);
@@ -107,15 +100,15 @@ public class SmsReceiver extends BroadcastReceiver{
                             raw[18] & 0xff, raw[19] & 0xff);
                     destAddress = InetAddress.getByName(addressString);
                 }
-                Log.i("sms", "Dest address " + destAddress.toString());
+                Log.i("SmsAsyncTask", "Destination address " + destAddress.toString());
                 packet.setAddress(destAddress);
                 packet.setPort(destPort);
 
-                StringBuilder sb = new StringBuilder("");
+                sb = new StringBuilder("");
                 for (int i = 0; i < query.length; i++) {
                     sb.append(String.format("%02x", query[i]) + " ");
                 }
-                Log.i("dns", "Send packet[" + packet.getLength() + "]: " + sb.toString());
+                Log.i("SmsAsyncTask", "Send packet [" + packet.getLength() + "]: " + sb.toString());
                 socket.send(packet);
 
                 byte[] buffer = new byte[2048];
@@ -126,7 +119,7 @@ public class SmsReceiver extends BroadcastReceiver{
                 for (int i = 0; i < packet.getLength(); i++) {
                     sb.append(String.format("%02x", buffer[i]) + " ");
                 }
-                Log.i("dns", "Recv packet[" + packet.getLength() + "]: " + sb.toString());
+                Log.i("SmsAsyncTask", "Recv packet [" + packet.getLength() + "]: " + sb.toString());
 
                 for (int i = 0; i < (packet.getLength() / bytesPerSms) + 1; i++) {
                     int offset = i * bytesPerSms;
@@ -138,8 +131,16 @@ public class SmsReceiver extends BroadcastReceiver{
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                return;
+                return null;
             }
+
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... message) {
+            if (message != null && message.length > 0)
+                main_act.appendText(message[0]);
         }
     }
 }

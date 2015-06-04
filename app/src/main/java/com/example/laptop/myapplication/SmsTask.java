@@ -1,34 +1,40 @@
 package com.example.laptop.myapplication;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.telephony.SmsManager;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-
-/**
- * Created by Dennis on 5/22/2015.
- */
-public class SmsTask extends AsyncTask<String, Void, String> {
+public class SmsTask extends AsyncTask<Void, Void, Void> {
+    Context context;
     TextView tv;
-    public SmsTask(TextView view) {
-        tv = view;
+    String phoneNo;
+    SmsManager smsManager = SmsManager.getDefault();
+
+    public SmsTask(Context context, TextView tv, String phoneNo) {
+        this.context = context;
+        this.tv = tv;
+        this.phoneNo = phoneNo;
     }
+
     @Override
-    protected String doInBackground(String... urls) {
-        SmsManager smsManager = SmsManager.getDefault();
-        String str = "Sent";
+    protected Void doInBackground(Void... urls) {
         try {
-            //String phoneNo = "5556";
-            String phoneNo = "16262158107";
             String msg;
 
+            byte [] all = new byte[100];
+            for(int i = 0; i < 100; i++)
+            {
+                all[i] = (byte) i;
+            }
+            msg = Base64.encodeToString(all, Base64.DEFAULT);
+            Log.i("sms", "Sending message [" + msg.length() + "]: " + msg);
+            smsManager.sendTextMessage(phoneNo, null, msg, null, null);
+            Log.i("sms", "Message sent");
+            /*
             byte [] all = new byte[64];
             all[0] = 100;
             all[1] = 1;
@@ -73,18 +79,17 @@ public class SmsTask extends AsyncTask<String, Void, String> {
             Log.i("sms", "Sending message: " + msg);
             smsManager.sendTextMessage(phoneNo, null, msg, null, null);
             Log.i("sms", "Message sent");
-
+            */
         } catch (Exception e) {
             e.printStackTrace();
             Log.i("sms", "Exception");
         }
 
-        return str;
+        return null;
     }
 
     @Override
-    protected void onPostExecute(String s) {
-        tv.setText(s);
+    protected void onPostExecute(Void ignored) {
+        Toast.makeText(context, "Sent SMS to " + phoneNo, Toast.LENGTH_SHORT).show();
     }
 }
-

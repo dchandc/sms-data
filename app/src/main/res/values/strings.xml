@@ -1,7 +1,5 @@
 <resources>
-    <string name="app_name">My Application</string>
-
-    <string name="hello_world">Received text messages will replace me</string>
+    <string name="app_name">SMS Data</string>
     <string name="action_settings">Settings</string>
-    <string name="blah">This button doesn\'t do anything</string>
+    <string name="debug">Test SMS</string>
 </resources>
