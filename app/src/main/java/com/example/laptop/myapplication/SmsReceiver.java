@@ -115,7 +115,7 @@ public class SmsReceiver extends BroadcastReceiver{
                 packet.setData(buffer);
                 packet.setLength(buffer.length);
                 socket.receive(packet);
-                sb = new StringBuilder("Received data [" + packet.getLength() + "]:");
+                sb = new StringBuilder("Received data [" + packet.getLength() + "]: ");
                 for (int i = 0; i < packet.getLength(); i++) {
                     sb.append(String.format("%02x", buffer[i]) + " ");
                 }
@@ -128,7 +128,7 @@ public class SmsReceiver extends BroadcastReceiver{
                     byte[] sub = new byte[len];
                     System.arraycopy(buffer, offset, sub, 0, len);
                     String msg = Base64.encodeToString(sub, Base64.DEFAULT);
-                    publishProgress("Byte64-encoded SMS message [" + msg.length() + "]:" + msg);
+                    publishProgress("Byte64-encoded SMS message [" + msg.length() + "]: " + msg);
                     smsManager.sendTextMessage(from, null, msg, null, null);
                 }
             } catch (Exception e) {
