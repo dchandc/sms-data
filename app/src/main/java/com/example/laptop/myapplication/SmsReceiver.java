@@ -119,6 +119,7 @@ public class SmsReceiver extends BroadcastReceiver{
                 for (int i = 0; i < packet.getLength(); i++) {
                     sb.append(String.format("%02x", buffer[i]) + " ");
                 }
+                sb.append("\n");
                 Log.i("SmsAsyncTask", "Recv packet [" + packet.getLength() + "]: " + sb.toString());
                 publishProgress(sb.toString());
 
