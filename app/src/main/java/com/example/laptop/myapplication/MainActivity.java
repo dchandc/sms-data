@@ -44,8 +44,8 @@ public class MainActivity extends Activity {
         tv = (TextView) findViewById(R.id.text_status);
         tv.setMovementMethod(new ScrollingMovementMethod());
 
-        Button b = (Button) findViewById(R.id.button_debug);
-        b.setOnClickListener(new Button.OnClickListener() {
+        Button b_debug = (Button) findViewById(R.id.button_debug);
+        b_debug.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
                 builder.setTitle("Send test SMS message");
@@ -78,6 +78,13 @@ public class MainActivity extends Activity {
         });
 
         appendText("Listening for SMS messages...\n");
+
+        Button b_clear = (Button) findViewById(R.id.button_clear);
+        b_clear.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                setText("Listening for SMS messages...\n");
+            }
+        });
     }
 
     /**
@@ -105,6 +112,12 @@ public class MainActivity extends Activity {
             m_bound = false;
         }
     };
+
+    public void setText(String s)
+    {
+        TextView tv = (TextView) findViewById(R.id.text_status);
+        tv.setText(s);
+    }
 
     public void appendText(String s)
     {
