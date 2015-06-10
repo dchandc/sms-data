@@ -25,6 +25,7 @@ public class SmsTask extends AsyncTask<Void, Void, Void> {
         try {
             String msg;
 
+            /*
             byte [] all = new byte[100];
             for(int i = 0; i < 100; i++)
             {
@@ -34,7 +35,8 @@ public class SmsTask extends AsyncTask<Void, Void, Void> {
             Log.i("sms", "Sending message [" + msg.length() + "]: " + msg);
             smsManager.sendTextMessage(phoneNo, null, msg, null, null);
             Log.i("sms", "Message sent");
-            /*
+            */
+
             byte [] all = new byte[64];
             all[0] = 100;
             all[1] = 1;
@@ -43,43 +45,23 @@ public class SmsTask extends AsyncTask<Void, Void, Void> {
             {
                 all[i] = (byte) i;
             }
-            msg = Base64.encodeToString(all, Base64.DEFAULT);
-            Log.i("sms", "Sending message: " + msg);
+            msg = Base64.encodeToString(all, Base64.NO_WRAP);
+            Log.i("sms", "Sending message [" + msg.length() + "]: " + msg);
             smsManager.sendTextMessage(phoneNo, null, msg, null, null);
             Log.i("sms", "Message sent");
 
-            all[0] = 101;
+            all[0] = 100;
             all[1] = 2;
-            all[2] = 3;
-            msg = Base64.encodeToString(all, Base64.DEFAULT);
-            Log.i("sms", "Sending message: " + msg);
+            all[2] = 2;
+            for(int i = 3; i < 64; i++)
+            {
+                all[i] = (byte) i;
+            }
+            msg = Base64.encodeToString(all, Base64.NO_WRAP);
+            Log.i("sms", "Sending message [" + msg.length() + "]: " + msg);
             smsManager.sendTextMessage(phoneNo, null, msg, null, null);
             Log.i("sms", "Message sent");
 
-            all[0] = 102;
-            all[1] = 1;
-            all[2] = 1;
-            msg = Base64.encodeToString(all, Base64.DEFAULT);
-            Log.i("sms", "Sending message: " + msg);
-            smsManager.sendTextMessage(phoneNo, null, msg, null, null);
-            Log.i("sms", "Message sent");
-
-            all[0] = 101;
-            all[1] = 1;
-            all[2] = 3;
-            msg = Base64.encodeToString(all, Base64.DEFAULT);
-            Log.i("sms", "Sending message: " + msg);
-            smsManager.sendTextMessage(phoneNo, null, msg, null, null);
-            Log.i("sms", "Message sent");
-
-            all[0] = 101;
-            all[1] = 3;
-            all[2] = 3;
-            msg = Base64.encodeToString(all, Base64.DEFAULT);
-            Log.i("sms", "Sending message: " + msg);
-            smsManager.sendTextMessage(phoneNo, null, msg, null, null);
-            Log.i("sms", "Message sent");
-            */
         } catch (Exception e) {
             e.printStackTrace();
             Log.i("sms", "Exception");
