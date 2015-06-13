@@ -54,7 +54,7 @@ public class SmsReceiver extends BroadcastReceiver{
             String body = sb.toString();
             main_act.appendText("SMS message from " +
                     from + " [" + body.length() + "]: " +
-                    body);
+                    body + "\n");
 
             byte[] raw = Base64.decode(body, Base64.NO_WRAP);
             sb = new StringBuilder("Byte64-decoded SMS message [" + raw.length + "]: ");
