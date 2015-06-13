@@ -79,7 +79,7 @@ public class MainActivity extends Activity {
         });
 
         Button b_filter = (Button) findViewById(R.id.button_filter);
-        b_debug.setOnClickListener(new Button.OnClickListener() {
+        b_filter.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
                 builder.setTitle("Set filter");
