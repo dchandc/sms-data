@@ -42,6 +42,9 @@ public class SmsReceiver extends BroadcastReceiver{
                 return;
 
             String from = SmsMessage.createFromPdu((byte[]) pdus[0]).getOriginatingAddress();
+            if (main_act.filterNumber != null && !main_act.filterNumber.equals(from))
+                return;
+
             StringBuilder sb = new StringBuilder("");
             for (int j = 0; j < pdus.length; j++) {
                 SmsMessage sms = SmsMessage.createFromPdu((byte[]) pdus[j]);

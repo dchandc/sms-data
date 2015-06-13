@@ -28,6 +28,7 @@ public class MainActivity extends Activity {
     private boolean m_bound = false;
     TextView tv;
     Context context;
+    public String filterNumber = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +61,39 @@ public class MainActivity extends Activity {
                         String str = eText.getText().toString();
                         if (str != null && str.matches("\\d+(\\.\\d+)?")) {
                             new SmsTask(context, tv, str).execute();
+                        } else {
+                            Toast.makeText(context, "Invalid phone number",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+                builder.show();
+            }
+        });
+
+        Button b_filter = (Button) findViewById(R.id.button_filter);
+        b_debug.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                builder.setTitle("Set filter");
+                builder.setMessage("Enter phone number");
+                final EditText eText = new EditText(context);
+                eText.setInputType(InputType.TYPE_CLASS_TEXT);
+                eText.setTextColor(Color.rgb(0, 0, 0));
+                builder.setView(eText);
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String str = eText.getText().toString();
+                        if (str != null && str.matches("\\d+(\\.\\d+)?")) {
+                            filterNumber = str;
                         } else {
                             Toast.makeText(context, "Invalid phone number",
                                     Toast.LENGTH_SHORT).show();

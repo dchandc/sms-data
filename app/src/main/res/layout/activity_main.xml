@@ -34,10 +34,19 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Clear"
+        android:text="Clear Screen"
         android:id="@+id/button_clear"
         android:layout_alignParentBottom="true"
         android:layout_toLeftOf="@+id/button_debug"
         android:layout_toStartOf="@+id/button_debug" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set Filter"
+        android:id="@+id/button_filter"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@+id/button_clear"
+        android:layout_toStartOf="@+id/button_clear" />
 
 </RelativeLayout>
