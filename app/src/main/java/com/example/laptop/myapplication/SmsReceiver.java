@@ -21,21 +21,14 @@ import java.util.Comparator;
 public class SmsReceiver extends BroadcastReceiver{
     MainActivity main_act;
     SmsManager smsManager;
-    DatagramSocket socket;
     String googleDns = "8.8.8.8";
     int dnsPort = 53;
     int bytesPerSms = 115;
     ArrayList<MessageBuffer> mbufList;
-    int seqNum = 0;
 
     public SmsReceiver() {
         smsManager = SmsManager.getDefault();
-        mbufList = new ArrayList<MessageBuffer>();
-        try {
-            socket = new DatagramSocket();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        mbufList = new ArrayList<>();
     }
 
     public void onReceive(Context context, Intent intent)
@@ -140,15 +133,16 @@ public class SmsReceiver extends BroadcastReceiver{
 
         @Override
         protected Void doInBackground(Void... voids) {
-            int queryLength = mergedData.length - 28;
-            if (queryLength < 0)
-                return null;
-
-            byte[] query = new byte[queryLength];
-            System.arraycopy(mergedData, 28, query, 0, queryLength);
-            DatagramPacket packet = new DatagramPacket(query, query.length);
-
             try {
+                int queryLength = mergedData.length - 28;
+                if (queryLength < 0)
+                    return null;
+
+                DatagramSocket socket = new DatagramSocket();
+                byte[] query = new byte[queryLength];
+                System.arraycopy(mergedData, 28, query, 0, queryLength);
+                DatagramPacket packet = new DatagramPacket(query, query.length);
+
                 InetAddress destAddress;
                 int destPort = (mergedData[22] & 0xff) << 8 | (mergedData[23] & 0xff);
                 if (destPort == dnsPort) {
@@ -198,7 +192,6 @@ public class SmsReceiver extends BroadcastReceiver{
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                return null;
             }
 
             return null;
