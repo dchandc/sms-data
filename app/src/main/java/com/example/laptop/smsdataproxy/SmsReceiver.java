@@ -1,4 +1,4 @@
-package com.example.laptop.myapplication;
+package com.example.laptop.smsdataproxy;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

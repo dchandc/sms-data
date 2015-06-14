@@ -1,4 +1,4 @@
-package com.example.laptop.myapplication;
+package com.example.laptop.smsdataproxy;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -14,7 +14,6 @@ import android.os.IBinder;
 import android.text.InputType;
 import android.text.Layout;
 import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;

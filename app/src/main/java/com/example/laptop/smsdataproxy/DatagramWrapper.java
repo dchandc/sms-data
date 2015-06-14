@@ -1,4 +1,4 @@
-package com.example.laptop.myapplication;
+package com.example.laptop.smsdataproxy;
 
 import java.net.DatagramPacket;
 import java.net.InetAddress;
