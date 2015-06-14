@@ -23,10 +23,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
-    private SmsService sr;
     private boolean m_bound = false;
-    TextView tv;
-    Context context;
+    public TextView tv;
+    public Context context;
     public String filterNumber = null;
 
     @Override
@@ -44,6 +43,7 @@ public class MainActivity extends Activity {
         tv = (TextView) findViewById(R.id.text_status);
         tv.setMovementMethod(new ScrollingMovementMethod());
 
+        // Start a new SmsTask to send a test SMS to the specified phone number.
         Button b_debug = (Button) findViewById(R.id.button_debug);
         b_debug.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String str = eText.getText().toString();
-                        if (str != null && str.matches("\\d+(\\.\\d+)?")) {
+                        if (str.matches("\\d+(\\.\\d+)?")) {
                             new SmsTask(context, tv, str).execute();
                         } else {
                             Toast.makeText(context, "Invalid phone number",
@@ -77,6 +77,7 @@ public class MainActivity extends Activity {
             }
         });
 
+        // Set the filter phone number to be checked by SmsReceiver.
         Button b_filter = (Button) findViewById(R.id.button_filter);
         b_filter.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
@@ -91,7 +92,7 @@ public class MainActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String str = eText.getText().toString();
-                        if (str != null && str.matches("\\d+(\\.\\d+)?")) {
+                        if (str.matches("\\d+(\\.\\d+)?")) {
                             filterNumber = str;
                         } else {
                             Toast.makeText(context, "Invalid phone number",
@@ -134,7 +135,7 @@ public class MainActivity extends Activity {
         public void onServiceConnected(ComponentName className, IBinder service)
         {
             SmsService.SmsBinder binder = (SmsService.SmsBinder) service;
-            sr = binder.getService();
+            SmsService sr = binder.getService();
             sr.setCallingActivity(MainActivity.this);
             m_bound = true;
         }
@@ -146,12 +147,18 @@ public class MainActivity extends Activity {
         }
     };
 
+    /**
+     * Set the text for the status box, effectively clearing previous output.
+     */
     public void setText(String s)
     {
         TextView tv = (TextView) findViewById(R.id.text_status);
         tv.setText(s);
     }
 
+    /**
+     * Append text to the status and scroll to the bottom.
+     */
     public void appendText(String s)
     {
         TextView tv = (TextView) findViewById(R.id.text_status);
@@ -180,11 +187,7 @@ public class MainActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+        return (id == R.id.action_settings || super.onOptionsItemSelected(item));
     }
 
     /**

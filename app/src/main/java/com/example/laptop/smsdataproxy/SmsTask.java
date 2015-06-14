@@ -8,11 +8,14 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/**
+ * This class is used for testing SMS functionality.
+ */
 public class SmsTask extends AsyncTask<Void, Void, Void> {
-    Context context;
-    TextView tv;
-    String phoneNo;
-    SmsManager smsManager = SmsManager.getDefault();
+    private Context context;
+    private TextView tv;
+    private String phoneNo;
+    private SmsManager smsManager = SmsManager.getDefault();
 
     public SmsTask(Context context, TextView tv, String phoneNo) {
         this.context = context;
@@ -32,11 +35,12 @@ public class SmsTask extends AsyncTask<Void, Void, Void> {
                 all[i] = (byte) i;
             }
             msg = Base64.encodeToString(all, Base64.DEFAULT);
-            Log.i("sms", "Sending message [" + msg.length() + "]: " + msg);
+            Log.i("SmsTask", "Sending message [" + msg.length() + "]: " + msg);
             smsManager.sendTextMessage(phoneNo, null, msg, null, null);
-            Log.i("sms", "Message sent");
+            Log.i("SmsTask", "Message sent");
             */
 
+            // Test MessageBuffer.
             byte [] all = new byte[64];
             all[0] = 100;
             all[1] = 1;
@@ -46,9 +50,9 @@ public class SmsTask extends AsyncTask<Void, Void, Void> {
                 all[i] = (byte) i;
             }
             msg = Base64.encodeToString(all, Base64.NO_WRAP);
-            Log.i("sms", "Sending message [" + msg.length() + "]: " + msg);
+            Log.i("SmsTask", "Sending message [" + msg.length() + "]: " + msg);
             smsManager.sendTextMessage(phoneNo, null, msg, null, null);
-            Log.i("sms", "Message sent");
+            Log.i("SmsTask", "Message sent");
 
             all[0] = 100;
             all[1] = 2;
@@ -58,13 +62,13 @@ public class SmsTask extends AsyncTask<Void, Void, Void> {
                 all[i] = (byte) i;
             }
             msg = Base64.encodeToString(all, Base64.NO_WRAP);
-            Log.i("sms", "Sending message [" + msg.length() + "]: " + msg);
+            Log.i("SmsTask", "Sending message [" + msg.length() + "]: " + msg);
             smsManager.sendTextMessage(phoneNo, null, msg, null, null);
-            Log.i("sms", "Message sent");
+            Log.i("SmsTask", "Message sent");
 
         } catch (Exception e) {
             e.printStackTrace();
-            Log.i("sms", "Exception");
+            Log.i("SmsTask", "Exception");
         }
 
         return null;

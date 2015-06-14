@@ -19,12 +19,12 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class SmsReceiver extends BroadcastReceiver{
-    MainActivity main_act;
-    SmsManager smsManager;
-    String googleDns = "8.8.8.8";
-    int dnsPort = 53;
-    int bytesPerSms = 115;
-    ArrayList<MessageBuffer> mbufList;
+    public MainActivity main_act;
+    private SmsManager smsManager;
+    private String googleDns = "8.8.8.8";
+    private int dnsPort = 53;
+    private int bytesPerSms = 115;
+    private ArrayList<MessageBuffer> mbufList;
 
     public SmsReceiver() {
         smsManager = SmsManager.getDefault();
@@ -41,13 +41,14 @@ public class SmsReceiver extends BroadcastReceiver{
             if (pdus.length < 1)
                 return;
 
+            // Ignore unwanted SMS messages if filter number is set.
             String from = SmsMessage.createFromPdu((byte[]) pdus[0]).getOriginatingAddress();
             if (main_act.filterNumber != null && !main_act.filterNumber.equals(from))
                 return;
 
             StringBuilder sb = new StringBuilder("");
-            for (int j = 0; j < pdus.length; j++) {
-                SmsMessage sms = SmsMessage.createFromPdu((byte[]) pdus[j]);
+            for (Object pdu : pdus) {
+                SmsMessage sms = SmsMessage.createFromPdu((byte[]) pdu);
                 sb.append(sms.getMessageBody());
             }
 
@@ -56,6 +57,7 @@ public class SmsReceiver extends BroadcastReceiver{
                     from + " [" + body.length() + "]: " +
                     body + "\n");
 
+            // Base64.decode may throw an exception if the string length is not a multiple of 4.
             byte[] raw;
             try {
                 raw = Base64.decode(body, Base64.NO_WRAP);
@@ -64,8 +66,8 @@ public class SmsReceiver extends BroadcastReceiver{
                 return;
             }
             sb = new StringBuilder("Byte64-decoded SMS message [" + raw.length + "]: ");
-            for (int i = 0; i < raw.length; i++) {
-                sb.append(String.format("%02x ", raw[i]));
+            for (byte b : raw) {
+                sb.append(String.format("%02x ", b));
             }
             sb.append("\n");
             main_act.appendText(sb.toString());
@@ -77,13 +79,14 @@ public class SmsReceiver extends BroadcastReceiver{
             int dataNum = raw[1];
             int dataCount = raw[2];
             Log.i("sms", seqNum + " " + dataNum + " " + dataCount);
-            // dataNum and dataCount start at 1
+            // dataNum and dataCount start at 1, not 0.
             if (seqNum < 0 || dataNum < 1 || dataCount < 1 || dataNum > dataCount)
                 return;
 
             byte[] data = new byte[raw.length - 3];
             System.arraycopy(raw, 3, data, 0, raw.length - 3);
 
+            // Search for existing MessageBuffer with missing fragments.
             boolean found = false;
             MessageBuffer mbuf = null;
             int mbufIndex = -1;
@@ -93,27 +96,30 @@ public class SmsReceiver extends BroadcastReceiver{
                     found = true;
                     mbuf.add(data, dataNum);
                     mbufIndex = i;
-                    Log.i("sms", "Found mbuf with seqNum " + seqNum);
+                    Log.i("SmsReceiver", "Found mbuf with seqNum " + seqNum);
                     break;
                 }
             }
 
+            // Add new MessageBuffer if none found.
             if (!found) {
                 mbuf = new MessageBuffer(seqNum);
                 mbuf.add(data, dataNum);
                 mbufList.add(mbuf);
                 mbufIndex = mbufList.size() - 1;
-                Log.i("sms", "Added mbuf with seqNum " + seqNum);
+                Log.i("SmsReceiver", "Added mbuf with seqNum " + seqNum);
             }
 
+            // Check MessageBuffer count, merge data, and start task to forward the packet.
             if (mbuf.count == dataCount) {
                 byte[] mergedData = mbuf.getData();
                 sb = new StringBuilder("");
-                for (int i = 0; i < mergedData.length; i++) {
-                    sb.append(String.format("%02x", mergedData[i]) + " ");
+                for (byte b : mergedData) {
+                    sb.append(String.format("%02x", b));
+                    sb.append(" ");
                 }
-                Log.i("sms", "Merged data[" + mergedData.length + "]: " + sb.toString());
-                SmsAsyncTask task = new SmsAsyncTask(seqNum++, from, mergedData);
+                Log.i("SmsReceiver", "Merged data[" + mergedData.length + "]: " + sb.toString());
+                SmsAsyncTask task = new SmsAsyncTask(seqNum, from, mergedData);
                 if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
                     task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 else
@@ -128,11 +134,13 @@ public class SmsReceiver extends BroadcastReceiver{
         main_act = act;
     }
 
-
+    /**
+     * An instance of this class is created for each complete packet received.
+     */
     public class SmsAsyncTask extends AsyncTask<Void, String, Void> {
-        String from;
-        byte[] mergedData;
-        int seqNum;
+        private int seqNum;
+        private String from;
+        private byte[] mergedData;
 
         public SmsAsyncTask(int seqNum, String from, byte[] mergedData) {
             this.seqNum = seqNum;
@@ -143,15 +151,18 @@ public class SmsReceiver extends BroadcastReceiver{
         @Override
         protected Void doInBackground(Void... voids) {
             try {
+                // Packet must have IP and UDP header present.
                 int queryLength = mergedData.length - 28;
                 if (queryLength < 0)
                     return null;
 
+                // Without arguments, DatagramSocket() binds to any available port and address.
                 DatagramSocket socket = new DatagramSocket();
                 byte[] query = new byte[queryLength];
                 System.arraycopy(mergedData, 28, query, 0, queryLength);
                 DatagramPacket packet = new DatagramPacket(query, query.length);
 
+                // Use Google DNS address for DNS queries, otherwise copy destination address.
                 InetAddress destAddress;
                 int destPort = (mergedData[22] & 0xff) << 8 | (mergedData[23] & 0xff);
                 if (destPort == dnsPort) {
@@ -167,24 +178,28 @@ public class SmsReceiver extends BroadcastReceiver{
                 packet.setPort(destPort);
 
                 StringBuilder sb = new StringBuilder("");
-                for (int i = 0; i < query.length; i++) {
-                    sb.append(String.format("%02x", query[i]) + " ");
+                for (byte b : query) {
+                    sb.append(String.format("%02x", b));
+                    sb.append(" ");
                 }
                 Log.i("SmsAsyncTask", "Send packet [" + packet.getLength() + "]: " + sb.toString());
                 socket.send(packet);
 
+                // Switch buffer to be able to receive maximum UDP packet size.
                 byte[] buffer = new byte[2048];
                 packet.setData(buffer);
                 packet.setLength(buffer.length);
                 socket.receive(packet);
                 sb = new StringBuilder("Received data [" + packet.getLength() + "]: ");
                 for (int i = 0; i < packet.getLength(); i++) {
-                    sb.append(String.format("%02x", buffer[i]) + " ");
+                    sb.append(String.format("%02x", buffer[i]));
+                    sb.append(" ");
                 }
                 sb.append("\n");
                 Log.i("SmsAsyncTask", "Recv packet [" + packet.getLength() + "]: " + sb.toString());
                 publishProgress(sb.toString());
 
+                // Fragment packet, encode, and send SMS message.
                 int count = (packet.getLength() / bytesPerSms) + 1;
                 for (int i = 0; i < count; i++) {
                     int offset = i * bytesPerSms;
@@ -213,11 +228,14 @@ public class SmsReceiver extends BroadcastReceiver{
         }
     }
 
+    /**
+     * This class holds packet fragments for sorting and merging.
+     */
     public class MessageBuffer {
-        ArrayList<Entry> list;
-        int count;
-        int length;
-        int seqNum;
+        public ArrayList<Entry> list;
+        public int count;
+        public int length;
+        public int seqNum;
 
         class Entry {
             byte[] data;
@@ -231,7 +249,7 @@ public class SmsReceiver extends BroadcastReceiver{
 
         public MessageBuffer(int seqNum) {
             this.seqNum = seqNum;
-            list = new ArrayList<Entry>();
+            list = new ArrayList<>();
             count = 0;
             length = 0;
         }
@@ -240,7 +258,7 @@ public class SmsReceiver extends BroadcastReceiver{
             if (data == null || dataNum < 1)
                 return;
 
-            // Reject duplicates
+            // Reject duplicates.
             for (int i = 0; i < list.size(); i++) {
                 if (list.get(i).dataNum == dataNum)
                     return;
